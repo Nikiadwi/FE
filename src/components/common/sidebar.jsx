@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 
 function Sidebar({ role, onNavigate, onLogout }) {
-  const [activeMenu, setActiveMenu] = useState("dosen");
+  const [activeMenu, setActiveMenu] = useState("dashboard");
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // Deteksi perubahan ukuran layar
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -25,7 +24,7 @@ function Sidebar({ role, onNavigate, onLogout }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Menu berdasarkan role (SESUAI DENGAN DATA-PAGE DI KODE LAMA)
+  // Menu berdasarkan role (JADWAL SUDAH DIHAPUS)
   const menus = {
     admin: [
       { id: "dosen", label: "Data Dosen", icon: "bi-person-badge" },
@@ -33,7 +32,6 @@ function Sidebar({ role, onNavigate, onLogout }) {
     ],
     dosen: [
       { id: "dashboard", label: "Dashboard", icon: "bi-grid" },
-      { id: "jadwal", label: "Jadwal", icon: "bi-calendar" },
       { id: "nilai", label: "Input Nilai", icon: "bi-pencil-square" },
     ],
     mahasiswa: [
@@ -65,7 +63,6 @@ function Sidebar({ role, onNavigate, onLogout }) {
     setIsOpen(!isOpen);
   };
 
-  // CSS untuk sidebar (mirip dengan kode lama)
   const sidebarStyle = {
     width: isMobile ? "280px" : "250px",
     height: "100vh",
@@ -85,7 +82,6 @@ function Sidebar({ role, onNavigate, onLogout }) {
 
   return (
     <>
-      {/* Overlay untuk mobile */}
       {isMobile && isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -101,7 +97,6 @@ function Sidebar({ role, onNavigate, onLogout }) {
         />
       )}
 
-      {/* Tombol Hamburger (mobile) */}
       {isMobile && (
         <button
           onClick={toggleSidebar}
@@ -125,9 +120,8 @@ function Sidebar({ role, onNavigate, onLogout }) {
         </button>
       )}
 
-      {/* SIDEBAR - dengan class seperti kode lama */}
       <div id="sidebar-wrapper" style={sidebarStyle}>
-        {/* Header Sidebar */}
+        {/* Header */}
         <div
           style={{
             padding: "0 20px 20px 20px",
@@ -146,7 +140,7 @@ function Sidebar({ role, onNavigate, onLogout }) {
           </p>
         </div>
 
-        {/* Menu Navigation - PAKE CLASS .sidebar__link seperti kode lama */}
+        {/* Menu */}
         <nav style={{ flex: 1, padding: "20px 0" }}>
           {menus[role]?.map((menu) => (
             <button
@@ -197,7 +191,7 @@ function Sidebar({ role, onNavigate, onLogout }) {
           ))}
         </nav>
 
-        {/* Logout Button - PAKE CLASS .btn-logout-sidebar seperti kode lama */}
+        {/* Logout */}
         <div
           style={{
             padding: "0 20px",

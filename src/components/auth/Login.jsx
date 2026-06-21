@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { login } from "../../api/authApi";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -12,29 +13,27 @@ const Login = () => {
     setError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Panggil API login
+      const result = await login(username, password);
 
-      const validUsers = {
-        admin: { username: "admin", role: "admin" },
-        dosen: { username: "dosen", role: "dosen" },
-        mahasiswa: { username: "mahasiswa", role: "mahasiswa" },
-      };
+      if (result.status === "success") {
+        // Simpan data user ke localStorage
+        localStorage.setItem("user", JSON.stringify(result.data));
 
-      if (validUsers[username] && password === username) {
-        localStorage.setItem("user", JSON.stringify(validUsers[username]));
-
-        if (validUsers[username].role === "admin") {
+        // Redirect berdasarkan role
+        if (result.data.role === "admin") {
           window.location.href = "/admin";
-        } else if (validUsers[username].role === "dosen") {
+        } else if (result.data.role === "dosen") {
           window.location.href = "/dosen";
-        } else {
+        } else if (result.data.role === "mahasiswa") {
           window.location.href = "/mahasiswa";
         }
       } else {
-        setError("Username atau password salah!");
+        setError(result.message || "Login gagal");
       }
     } catch (err) {
-      setError("Login gagal. Periksa username dan password.");
+      setError("Terjadi kesalahan. Silakan coba lagi.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
