@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIMANTEP - Sistem Informasi Manajemen Terintegrasi</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Sistem Informasi Manajemen Terintegrasi (SIMANTEP) - Aplikasi pengelolaan data akademik mahasiswa, dosen, mata kuliah, dan nilai.">
+  <meta name="author" content="Antigravity Coding Assistant">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ==================== AUTHENTICATION LAYER ==================== -->
+  <div id="auth-overlay" class="auth-page">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <i class="fa-solid fa-graduation-cap"></i> SIMANTEP
+        </div>
+        <div class="auth-subtitle">Sistem Informasi Manajemen Terintegrasi</div>
+      </div>
+      
+      <div id="seed-notification" class="seed-alert" style="display: none;">
+        <span>Database tampaknya kosong. Ingin membuat akun admin default?</span>
+        <button id="btn-seed-db" class="btn-seed">Seed Admin</button>
+      </div>
+      
+      <form id="auth-form">
+        <div class="form-group">
+          <label for="login-username" class="form-label">Username</label>
+          <input type="text" id="login-username" class="form-control" placeholder="Masukkan username" required autocomplete="username">
+        </div>
+        
+        <div class="form-group">
+          <label for="login-password" class="form-label">Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="Masukkan password" required autocomplete="current-password">
+        </div>
+        
+        <div class="form-group">
+          <label for="login-role" class="form-label">Role Akses</label>
+          <select id="login-role" class="form-control" required>
+            <option value="admin" selected>Administrator (Admin)</option>
+            <option value="dosen">Dosen Pengajar</option>
+            <option value="mahasiswa">Mahasiswa</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APPLICATION CONTAINER ==================== -->
+  <div id="app-wrapper" class="app-container" style="display: none;">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i class="fa-solid fa-graduation-cap"></i> SIMANTEP
+        </div>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li class="sidebar-item active" data-view="dashboard">
+          <a href="#dashboard">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-item" data-view="mahasiswa">
+          <a href="#mahasiswa">
+            <i class="fa-solid fa-user-graduate"></i>
+            <span>Data Mahasiswa</span>
+          </a>
+        </li>
+        <li class="sidebar-item" data-view="dosen">
+          <a href="#dosen">
+            <i class="fa-solid fa-user-tie"></i>
+            <span>Data Dosen</span>
+          </a>
+        </li>
+        <li class="sidebar-item" data-view="matakuliah">
+          <a href="#matakuliah">
+            <i class="fa-solid fa-book"></i>
+            <span>Mata Kuliah</span>
+          </a>
+        </li>
+        <li class="sidebar-item" data-view="nilai">
+          <a href="#nilai">
+            <i class="fa-solid fa-file-signature"></i>
+            <span>Input & Kelola Nilai</span>
+          </a>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div id="user-avatar" class="avatar">A</div>
+          <div class="user-info">
+            <span id="user-display-name" class="user-name">Loading...</span>
+            <span id="user-display-role" class="user-role">ADMIN</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      
+      <!-- Top Sticky Header -->
+      <header class="top-header">
+        <div class="page-title-container">
+          <button id="sidebar-toggle" class="menu-toggle">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h2 id="current-page-title">Dashboard</h2>
+        </div>
+        
+        <div class="header-actions">
+          <button id="theme-toggle" class="theme-toggle-btn" title="Ganti Tema">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <button id="btn-logout" class="btn-logout">
+            <i class="fa-solid fa-power-off"></i> Keluar
+          </button>
+        </div>
+      </header>
+      
+      <!-- Page Views Container -->
+      <div class="view-container">
+        
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section active">
+          <div class="dashboard-grid">
+            <div class="stat-card" style="--accent-gradient: linear-gradient(135deg, #6366f1, #4f46e5); --accent-light: rgba(99, 102, 241, 0.1); --accent-color: #6366f1;">
+              <div class="stat-info">
+                <span class="stat-label">Total Mahasiswa</span>
+                <span id="stat-total-mahasiswa" class="stat-value">0</span>
+              </div>
+              <div class="stat-icon"><i class="fa-solid fa-user-graduate"></i></div>
+            </div>
+            
+            <div class="stat-card" style="--accent-gradient: linear-gradient(135deg, #10b981, #059669); --accent-light: rgba(16, 185, 129, 0.1); --accent-color: #10b981;">
+              <div class="stat-info">
+                <span class="stat-label">Total Dosen</span>
+                <span id="stat-total-dosen" class="stat-value">0</span>
+              </div>
+              <div class="stat-icon"><i class="fa-solid fa-user-tie"></i></div>
+            </div>
+            
+            <div class="stat-card" style="--accent-gradient: linear-gradient(135deg, #06b6d4, #0891b2); --accent-light: rgba(6, 182, 212, 0.1); --accent-color: #06b6d4;">
+              <div class="stat-info">
+                <span class="stat-label">Total Mata Kuliah</span>
+                <span id="stat-total-matakuliah" class="stat-value">0</span>
+              </div>
+              <div class="stat-icon"><i class="fa-solid fa-book"></i></div>
+            </div>
+            
+            <div class="stat-card" style="--accent-gradient: linear-gradient(135deg, #f59e0b, #d97706); --accent-light: rgba(245, 158, 11, 0.1); --accent-color: #f59e0b;">
+              <div class="stat-info">
+                <span class="stat-label">Total Record Nilai</span>
+                <span id="stat-total-nilai" class="stat-value">0</span>
+              </div>
+              <div class="stat-icon"><i class="fa-solid fa-file-signature"></i></div>
+            </div>
+          </div>
+          
+          <div class="dashboard-details">
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-chart-bar" style="color: var(--primary); margin-right: 8px;"></i> Visualisasi Statistik Data</h3>
+              </div>
+              <div class="card-body">
+                <div class="chart-placeholder">
+                  <div class="chart-bar-container">
+                    <div id="chart-bar-mhs" class="chart-bar" data-value="0" style="height: 10%;"></div>
+                    <span class="chart-bar-label">Mahasiswa</span>
+                  </div>
+                  <div class="chart-bar-container">
+                    <div id="chart-bar-dosen" class="chart-bar" data-value="0" style="height: 10%; background: linear-gradient(to top, #10b981, #34d399);"></div>
+                    <span class="chart-bar-label">Dosen</span>
+                  </div>
+                  <div class="chart-bar-container">
+                    <div id="chart-bar-mk" class="chart-bar" data-value="0" style="height: 10%; background: linear-gradient(to top, #06b6d4, #22d3ee);"></div>
+                    <span class="chart-bar-label">Mata Kuliah</span>
+                  </div>
+                  <div class="chart-bar-container">
+                    <div id="chart-bar-nilai" class="chart-bar" data-value="0" style="height: 10%; background: linear-gradient(to top, #f59e0b, #fbbf24);"></div>
+                    <span class="chart-bar-label">Nilai</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-bolt" style="color: var(--warning); margin-right: 8px;"></i> Akses Cepat</h3>
+              </div>
+              <div class="card-body">
+                <div class="quick-actions-list">
+                  <button class="quick-action-btn" data-action="add-mahasiswa">
+                    <i class="fa-solid fa-plus"></i> Tambah Mahasiswa
+                  </button>
+                  <button class="quick-action-btn" data-action="add-dosen">
+                    <i class="fa-solid fa-plus"></i> Tambah Dosen Baru
+                  </button>
+                  <button class="quick-action-btn" data-action="add-nilai">
+                    <i class="fa-solid fa-plus"></i> Input Nilai Baru
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- 2. MAHASISWA CRUD VIEW -->
+        <section id="view-mahasiswa" class="view-section">
+          <div class="table-header-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-mahasiswa" class="search-input" placeholder="Cari berdasarkan NIM atau Nama...">
+            </div>
+            <button id="btn-add-mahasiswa" class="btn btn-primary btn-action-restricted">
+              <i class="fa-solid fa-plus"></i> Tambah Mahasiswa
+            </button>
+          </div>
+          
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>NIM</th>
+                  <th>Nama Mahasiswa</th>
+                  <th>Program Studi</th>
+                  <th>Angkatan</th>
+                  <th>Status Akademik</th>
+                  <th style="width: 100px; text-align: center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-mahasiswa">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- 3. DOSEN CRUD VIEW -->
+        <section id="view-dosen" class="view-section">
+          <div class="table-header-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-dosen" class="search-input" placeholder="Cari berdasarkan NIDN atau Nama...">
+            </div>
+            <button id="btn-add-dosen" class="btn btn-primary btn-action-restricted">
+              <i class="fa-solid fa-plus"></i> Tambah Dosen Baru
+            </button>
+          </div>
+          
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>NIDN</th>
+                  <th>Nama Lengkap</th>
+                  <th>Status Dosen</th>
+                  <th>Jabatan Akademik</th>
+                  <th>Bidang Keahlian</th>
+                  <th style="width: 100px; text-align: center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-dosen">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- 4. MATA KULIAH CRUD VIEW -->
+        <section id="view-matakuliah" class="view-section">
+          <div class="table-header-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-matakuliah" class="search-input" placeholder="Cari berdasarkan Kode atau Nama MK...">
+            </div>
+            <button id="btn-add-matakuliah" class="btn btn-primary btn-action-restricted">
+              <i class="fa-solid fa-plus"></i> Tambah Mata Kuliah
+            </button>
+          </div>
+          
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kode MK</th>
+                  <th>Nama Mata Kuliah</th>
+                  <th>SKS</th>
+                  <th>Dosen Pengampu</th>
+                  <th style="width: 100px; text-align: center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-matakuliah">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+        <!-- 5. NILAI CRUD VIEW -->
+        <section id="view-nilai" class="view-section">
+          <div class="table-header-bar">
+            <div class="search-box" style="display: flex; gap: 8px; flex-wrap: wrap; width: auto; flex-grow: 1;">
+              <select id="filter-nilai-mahasiswa" class="form-control" style="max-width: 250px; background-color: var(--bg-secondary); border-color: var(--border-color);"></select>
+              <select id="filter-nilai-matakuliah" class="form-control" style="max-width: 250px; background-color: var(--bg-secondary); border-color: var(--border-color);"></select>
+              <button id="btn-reset-filter-nilai" class="btn btn-secondary"><i class="fa-solid fa-rotate-left"></i> Reset Filter</button>
+            </div>
+            <button id="btn-add-nilai" class="btn btn-primary btn-action-restricted">
+              <i class="fa-solid fa-plus"></i> Input Nilai Baru
+            </button>
+          </div>
+          
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>NIM - Mahasiswa</th>
+                  <th>Kode - Mata Kuliah</th>
+                  <th>Nilai Angka</th>
+                  <th>Nilai Huruf</th>
+                  <th>Predikat Evaluasi</th>
+                  <th style="width: 100px; text-align: center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-nilai">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+        
+      </div>
+      
+    </main>
+  </div>
+
+  <!-- ==================== MODAL SYSTEM ==================== -->
+  
+  <!-- 1. MAHASISWA FORM MODAL -->
+  <div id="modal-mahasiswa" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-mahasiswa-title">Form Data Mahasiswa</h3>
+        <button class="modal-close-btn" data-close="modal-mahasiswa"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-mahasiswa">
+        <div class="modal-body">
+          <input type="hidden" id="mhs-id">
+          <div class="form-group">
+            <label for="mhs-nim" class="form-label">Nomor Induk Mahasiswa (NIM)</label>
+            <input type="text" id="mhs-nim" class="form-control" required placeholder="Contoh: 2026040101">
+          </div>
+          <div class="form-group">
+            <label for="mhs-nama" class="form-label">Nama Lengkap</label>
+            <input type="text" id="mhs-nama" class="form-control" required placeholder="Contoh: Ahmad Syarif">
+          </div>
+          <div class="form-group">
+            <label for="mhs-prodi" class="form-label">Program Studi</label>
+            <input type="text" id="mhs-prodi" class="form-control" required placeholder="Contoh: Teknik Informatika">
+          </div>
+          <div class="form-group">
+            <label for="mhs-angkatan" class="form-label">Angkatan (Tahun)</label>
+            <input type="number" id="mhs-angkatan" class="form-control" required min="2000" max="2100" placeholder="Contoh: 2026">
+          </div>
+          <div class="form-group">
+            <label for="mhs-status" class="form-label">Status Akademik</label>
+            <select id="mhs-status" class="form-control">
+              <option value="Aktif" selected>Aktif</option>
+              <option value="Tidak Aktif">Tidak Aktif</option>
+              <option value="Cuti">Cuti</option>
+              <option value="Lulus">Lulus</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-mahasiswa">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. DOSEN FORM MODAL -->
+  <div id="modal-dosen" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-dosen-title">Form Data Dosen</h3>
+        <button class="modal-close-btn" data-close="modal-dosen"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-dosen">
+        <div class="modal-body">
+          <input type="hidden" id="dosen-id">
+          <div class="form-group">
+            <label for="dosen-nidn" class="form-label">Nomor Induk Dosen Nasional (NIDN)</label>
+            <input type="text" id="dosen-nidn" class="form-control" required placeholder="Contoh: 0012345678">
+          </div>
+          <div class="form-group">
+            <label for="dosen-nama" class="form-label">Nama Lengkap beserta Gelar</label>
+            <input type="text" id="dosen-nama" class="form-control" required placeholder="Contoh: Dr. Jonas Schmedtmann">
+          </div>
+          <div class="form-group">
+            <label for="dosen-status" class="form-label">Status Kepegawaian</label>
+            <select id="dosen-status" class="form-control">
+              <option value="Dosen Tetap" selected>Dosen Tetap</option>
+              <option value="Dosen Tidak Tetap">Dosen Tidak Tetap</option>
+              <option value="Dosen Luar Biasa">Dosen Luar Biasa</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dosen-jabatan" class="form-label">Jabatan Fungsional</label>
+            <input type="text" id="dosen-jabatan" class="form-control" placeholder="Contoh: Lektor Kepala">
+          </div>
+          <div class="form-group">
+            <label for="dosen-keahlian" class="form-label">Bidang Keahlian</label>
+            <input type="text" id="dosen-keahlian" class="form-control" placeholder="Contoh: Web Architecture, Machine Learning">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-dosen">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MATA KULIAH FORM MODAL -->
+  <div id="modal-matakuliah" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-matakuliah-title">Form Mata Kuliah</h3>
+        <button class="modal-close-btn" data-close="modal-matakuliah"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-matakuliah">
+        <div class="modal-body">
+          <input type="hidden" id="mk-id">
+          <div class="form-group">
+            <label for="mk-kode" class="form-label">Kode Mata Kuliah</label>
+            <input type="text" id="mk-kode" class="form-control" required placeholder="Contoh: IF101">
+          </div>
+          <div class="form-group">
+            <label for="mk-nama" class="form-label">Nama Mata Kuliah</label>
+            <input type="text" id="mk-nama" class="form-control" required placeholder="Contoh: Pemrograman Web">
+          </div>
+          <div class="form-group">
+            <label for="mk-sks" class="form-label">Jumlah SKS</label>
+            <input type="number" id="mk-sks" class="form-control" required min="1" max="6" placeholder="Contoh: 3">
+          </div>
+          <div class="form-group">
+            <label for="mk-dosen" class="form-label">Dosen Pengampu</label>
+            <select id="mk-dosen" class="form-control">
+              <option value="">-- Pilih Dosen Pengampu --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-matakuliah">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. NILAI FORM MODAL -->
+  <div id="modal-nilai" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-nilai-title">Input Nilai Mahasiswa</h3>
+        <button class="modal-close-btn" data-close="modal-nilai"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-nilai">
+        <div class="modal-body">
+          <input type="hidden" id="nilai-id">
+          <div class="form-group">
+            <label for="nilai-mahasiswa" class="form-label">Nama Mahasiswa</label>
+            <select id="nilai-mahasiswa" class="form-control" required>
+              <option value="" disabled selected>-- Pilih Mahasiswa --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nilai-matakuliah" class="form-label">Mata Kuliah</label>
+            <select id="nilai-matakuliah" class="form-control" required>
+              <option value="" disabled selected>-- Pilih Mata Kuliah --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="nilai-angka" class="form-label">Nilai Angka (0 - 100)</label>
+            <input type="number" step="0.1" id="nilai-angka" class="form-control" required min="0" max="100" placeholder="Contoh: 85.5">
+          </div>
+          <div class="form-group">
+            <label for="nilai-huruf" class="form-label">Nilai Huruf</label>
+            <input type="text" id="nilai-huruf" class="form-control" required readonly placeholder="Akan dihitung otomatis..." style="background-color: var(--bg-primary); cursor: not-allowed; font-weight: bold; text-align: center; font-size: 16px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-nilai">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. DELETE CONFIRMATION MODAL -->
+  <div id="modal-confirm-delete" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Hapus Data?</h3>
+        <button class="modal-close-btn" data-close="modal-confirm-delete"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 14px; line-height: 1.5; color: var(--text-secondary);">Apakah Anda yakin ingin menghapus data ini secara permanen dari server? Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+      <div class="modal-footer" style="border-top: none; padding-top: 0;">
+        <button type="button" class="btn btn-secondary" data-close="modal-confirm-delete">Batal</button>
+        <button type="button" id="btn-confirm-delete-action" class="btn btn-primary" style="background-color: var(--danger); color: white;">Ya, Hapus Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JavaScript logic -->
+  <script src="app.js"></script>
+</body>
+</html>
