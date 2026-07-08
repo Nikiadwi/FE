@@ -1,31 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 
-export default function MahasiswaView({ currentUser, apiRequest, showToast, onDeleteTrigger, modalOpenTrigger, setModalOpenTrigger }) {
+export default function MahasiswaView({
+  currentUser,
+  apiRequest,
+  showToast,
+  onDeleteTrigger,
+  modalOpenTrigger,
+  setModalOpenTrigger,
+}) {
   const [students, setStudents] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
 
   // Form states
-  const [nim, setNim] = useState('');
-  const [nama, setNama] = useState('');
-  const [prodi, setProdi] = useState('');
-  const [angkatan, setAngkatan] = useState('');
-  const [status, setStatus] = useState('Aktif');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [nim, setNim] = useState("");
+  const [nama, setNama] = useState("");
+  const [prodi, setProdi] = useState("");
+  const [angkatan, setAngkatan] = useState("");
+  const [status, setStatus] = useState("Aktif");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const searchTimeoutRef = useRef(null);
 
-  const fetchStudents = async (searchVal = '') => {
+  const fetchStudents = async (searchVal = "") => {
     setLoading(true);
     try {
-      const query = searchVal ? `/api/mahasiswa?search=${encodeURIComponent(searchVal)}` : '/api/mahasiswa';
+      const query = searchVal
+        ? `/api/mahasiswa?search=${encodeURIComponent(searchVal)}`
+        : "/api/mahasiswa";
       const data = await apiRequest(query);
       setStudents(data);
     } catch (err) {
-      showToast('Gagal Memuat Data', err.message, 'error');
+      showToast("Gagal Memuat Data", err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -37,7 +46,7 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
 
   // Handle outside trigger to open add modal
   useEffect(() => {
-    if (modalOpenTrigger === 'add-mahasiswa') {
+    if (modalOpenTrigger === "add-mahasiswa") {
       handleOpenAddModal();
       setModalOpenTrigger(null); // Reset trigger
     }
@@ -58,13 +67,13 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
 
   const handleOpenAddModal = () => {
     setEditId(null);
-    setNim('');
-    setNama('');
-    setProdi('');
+    setNim("");
+    setNama("");
+    setProdi("");
     setAngkatan(new Date().getFullYear());
-    setStatus('Aktif');
-    setUsername('');
-    setPassword('');
+    setStatus("Aktif");
+    setUsername("");
+    setPassword("");
     setModalOpen(true);
   };
 
@@ -77,11 +86,11 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
       setProdi(m.program_studi);
       setAngkatan(m.angkatan);
       setStatus(m.status);
-      setUsername(m.username || '');
-      setPassword(''); // Keep blank unless updating
+      setUsername(m.username || "");
+      setPassword(""); // Keep blank unless updating
       setModalOpen(true);
     } catch (err) {
-      showToast('Error', 'Gagal memuat data detail mahasiswa.', 'error');
+      showToast("Error", "Gagal memuat data detail mahasiswa.", "error");
     }
   };
 
@@ -105,29 +114,37 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
     try {
       if (editId) {
         await apiRequest(`/api/mahasiswa/${editId}`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify(payload),
         });
-        showToast('Data Diperbarui', 'Data mahasiswa berhasil di-update.', 'success');
+        showToast(
+          "Data Diperbarui",
+          "Data mahasiswa berhasil di-update.",
+          "success",
+        );
       } else {
-        await apiRequest('/api/mahasiswa', {
-          method: 'POST',
+        await apiRequest("/api/mahasiswa", {
+          method: "POST",
           body: JSON.stringify(payload),
         });
-        showToast('Data Ditambahkan', 'Mahasiswa baru berhasil disimpan.', 'success');
+        showToast(
+          "Data Ditambahkan",
+          "Mahasiswa baru berhasil disimpan.",
+          "success",
+        );
       }
       setModalOpen(false);
       fetchStudents(search);
     } catch (err) {
-      showToast('Gagal Menyimpan', err.message, 'error');
+      showToast("Gagal Menyimpan", err.message, "error");
     }
   };
 
   const handleDelete = (id) => {
-    onDeleteTrigger('mahasiswa', id, () => fetchStudents(search));
+    onDeleteTrigger("mahasiswa", id, () => fetchStudents(search));
   };
 
-  const isStudent = currentUser?.role === 'mahasiswa';
+  const isStudent = currentUser?.role === "mahasiswa";
 
   return (
     <section id="view-mahasiswa" className="view-section active">
@@ -144,7 +161,11 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
           />
         </div>
         {!isStudent && (
-          <button id="btn-add-mahasiswa" className="btn btn-primary" onClick={handleOpenAddModal}>
+          <button
+            id="btn-add-mahasiswa"
+            className="btn btn-primary"
+            onClick={handleOpenAddModal}
+          >
             <i className="fa-solid fa-plus"></i> Tambah Mahasiswa
           </button>
         )}
@@ -159,25 +180,30 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
               <th>Program Studi</th>
               <th>Angkatan</th>
               <th>Status Akademik</th>
-              {!isStudent && <th style={{ width: '100px', textAlign: 'center' }}>Aksi</th>}
+              {!isStudent && (
+                <th style={{ width: "100px", textAlign: "center" }}>Aksi</th>
+              )}
             </tr>
           </thead>
           <tbody id="table-body-mahasiswa">
             {loading ? (
               <tr>
-                <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center' }}>
+                <td colSpan={isStudent ? 5 : 6} style={{ textAlign: "center" }}>
                   <i className="fa-solid fa-spinner fa-spin"></i> Memuat data...
                 </td>
               </tr>
             ) : students.length === 0 ? (
               <tr>
-                <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td
+                  colSpan={isStudent ? 5 : 6}
+                  style={{ textAlign: "center", color: "var(--text-muted)" }}
+                >
                   Tidak ada data mahasiswa ditemukan.
                 </td>
               </tr>
             ) : (
               students.map((m) => {
-                const statusClass = m.status.toLowerCase().replace(' ', '_');
+                const statusClass = m.status.toLowerCase().replace(" ", "_");
                 return (
                   <tr key={m.id}>
                     <td style={{ fontWeight: 700 }}>{m.nim}</td>
@@ -186,12 +212,15 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
                     <td>{m.angkatan}</td>
                     <td>
                       <span className={`badge badge-status-${statusClass}`}>
-                        <i className="fa-solid fa-circle" style={{ fontSize: '8px', marginRight: '6px' }}></i>{' '}
+                        <i
+                          className="fa-solid fa-circle"
+                          style={{ fontSize: "8px", marginRight: "6px" }}
+                        ></i>{" "}
                         {m.status}
                       </span>
                     </td>
                     {!isStudent && (
-                      <td style={{ textAlign: 'center' }}>
+                      <td style={{ textAlign: "center" }}>
                         <div className="action-buttons">
                           <button
                             className="btn-icon btn-icon-edit"
@@ -220,11 +249,21 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
 
       {/* MODAL FORM */}
       {modalOpen && (
-        <div className="modal-backdrop active" onClick={(e) => e.target.className.includes('modal-backdrop') && setModalOpen(false)}>
+        <div
+          className="modal-backdrop active"
+          onClick={(e) =>
+            e.target.className.includes("modal-backdrop") && setModalOpen(false)
+          }
+        >
           <div className="modal-card">
             <div className="modal-header">
-              <h3 id="modal-mahasiswa-title">{editId ? 'Edit Data Mahasiswa' : 'Tambah Mahasiswa Baru'}</h3>
-              <button className="modal-close-btn" onClick={() => setModalOpen(false)}>
+              <h3 id="modal-mahasiswa-title">
+                {editId ? "Edit Data Mahasiswa" : "Tambah Mahasiswa Baru"}
+              </h3>
+              <button
+                className="modal-close-btn"
+                onClick={() => setModalOpen(false)}
+              >
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
@@ -306,8 +345,20 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
                 </div>
 
                 {/* USER LOGIN ACCOUNTS INTEGRATION */}
-                <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '20px', paddingTop: '15px' }}>
-                  <h4 style={{ fontSize: '14px', marginBottom: '10px', color: 'var(--primary)' }}>
+                <div
+                  style={{
+                    borderTop: "1px solid var(--border-color)",
+                    marginTop: "20px",
+                    paddingTop: "15px",
+                  }}
+                >
+                  <h4
+                    style={{
+                      fontSize: "14px",
+                      marginBottom: "10px",
+                      color: "var(--primary)",
+                    }}
+                  >
                     Akun Login Mahasiswa (Opsional)
                   </h4>
                   <div className="form-group">
@@ -331,7 +382,11 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
                       type="password"
                       id="mhs-password"
                       className="form-control"
-                      placeholder={editId ? "Kosongkan jika tidak diubah" : "Password untuk login mahasiswa"}
+                      placeholder={
+                        editId
+                          ? "Kosongkan jika tidak diubah"
+                          : "Password untuk login mahasiswa"
+                      }
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -339,7 +394,11 @@ export default function MahasiswaView({ currentUser, apiRequest, showToast, onDe
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setModalOpen(false)}
+                >
                   Batal
                 </button>
                 <button type="submit" className="btn btn-primary">

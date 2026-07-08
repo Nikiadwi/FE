@@ -1,31 +1,41 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
+import * as XLSX from "xlsx";
 
-export default function DosenView({ currentUser, apiRequest, showToast, onDeleteTrigger, modalOpenTrigger, setModalOpenTrigger }) {
+export default function DosenView({
+  currentUser,
+  apiRequest,
+  showToast,
+  onDeleteTrigger,
+  modalOpenTrigger,
+  setModalOpenTrigger,
+}) {
   const [lecturers, setLecturers] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
 
   // Form states
-  const [nidn, setNidn] = useState('');
-  const [nama, setNama] = useState('');
-  const [statusDosen, setStatusDosen] = useState('Dosen Tetap');
-  const [jabatan, setJabatan] = useState('');
-  const [keahlian, setKeahlian] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [nidn, setNidn] = useState("");
+  const [nama, setNama] = useState("");
+  const [statusDosen, setStatusDosen] = useState("Dosen Tetap");
+  const [jabatan, setJabatan] = useState("");
+  const [keahlian, setKeahlian] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const searchTimeoutRef = useRef(null);
 
-  const fetchLecturers = async (searchVal = '') => {
+  const fetchLecturers = async (searchVal = "") => {
     setLoading(true);
     try {
-      const query = searchVal ? `/api/dosen?search=${encodeURIComponent(searchVal)}` : '/api/dosen';
+      const query = searchVal
+        ? `/api/dosen?search=${encodeURIComponent(searchVal)}`
+        : "/api/dosen";
       const data = await apiRequest(query);
       setLecturers(data);
     } catch (err) {
-      showToast('Gagal Memuat Data', err.message, 'error');
+      showToast("Gagal Memuat Data", err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -37,7 +47,7 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
 
   // Handle outside trigger to open add modal
   useEffect(() => {
-    if (modalOpenTrigger === 'add-dosen') {
+    if (modalOpenTrigger === "add-dosen") {
       handleOpenAddModal();
       setModalOpenTrigger(null); // Reset trigger
     }
@@ -58,13 +68,13 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
 
   const handleOpenAddModal = () => {
     setEditId(null);
-    setNidn('');
-    setNama('');
-    setStatusDosen('Dosen Tetap');
-    setJabatan('');
-    setKeahlian('');
-    setUsername('');
-    setPassword('');
+    setNidn("");
+    setNama("");
+    setStatusDosen("Dosen Tetap");
+    setJabatan("");
+    setKeahlian("");
+    setUsername("");
+    setPassword("");
     setModalOpen(true);
   };
 
@@ -75,13 +85,13 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
       setNidn(d.nidn);
       setNama(d.nama);
       setStatusDosen(d.status_dosen);
-      setJabatan(d.jabatan || '');
-      setKeahlian(d.keahlian || '');
-      setUsername(d.username || '');
-      setPassword(''); // Keep blank unless updating
+      setJabatan(d.jabatan || "");
+      setKeahlian(d.keahlian || "");
+      setUsername(d.username || "");
+      setPassword(""); // Keep blank unless updating
       setModalOpen(true);
     } catch (err) {
-      showToast('Error', 'Gagal memuat data detail dosen.', 'error');
+      showToast("Error", "Gagal memuat data detail dosen.", "error");
     }
   };
 
@@ -105,29 +115,87 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
     try {
       if (editId) {
         await apiRequest(`/api/dosen/${editId}`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify(payload),
         });
-        showToast('Data Diperbarui', 'Data dosen berhasil di-update.', 'success');
+        showToast(
+          "Data Diperbarui",
+          "Data dosen berhasil di-update.",
+          "success",
+        );
       } else {
-        await apiRequest('/api/dosen', {
-          method: 'POST',
+        await apiRequest("/api/dosen", {
+          method: "POST",
           body: JSON.stringify(payload),
         });
-        showToast('Data Ditambahkan', 'Dosen baru berhasil disimpan.', 'success');
+        showToast(
+          "Data Ditambahkan",
+          "Dosen baru berhasil disimpan.",
+          "success",
+        );
       }
       setModalOpen(false);
       fetchLecturers(search);
     } catch (err) {
-      showToast('Gagal Menyimpan', err.message, 'error');
+      showToast("Gagal Menyimpan", err.message, "error");
     }
   };
 
   const handleDelete = (id) => {
-    onDeleteTrigger('dosen', id, () => fetchLecturers(search));
+    onDeleteTrigger("dosen", id, () => fetchLecturers(search));
   };
 
-  const isStudent = currentUser?.role === 'mahasiswa';
+  // ========== FUNGSI EXPORT EXCEL ==========
+  const handleExportExcel = () => {
+    if (lecturers.length === 0) {
+      showToast(
+        "Tidak Ada Data",
+        "Data dosen kosong, tidak bisa export.",
+        "error",
+      );
+      return;
+    }
+
+    // Siapkan data untuk Excel
+    const dataExcel = lecturers.map((d, index) => ({
+      No: index + 1,
+      NIDN: d.nidn,
+      "Nama Lengkap": d.nama,
+      "Status Dosen": d.status_dosen,
+      "Jabatan Akademik": d.jabatan || "-",
+      "Bidang Keahlian": d.keahlian || "-",
+    }));
+
+    // Buat worksheet
+    const ws = XLSX.utils.json_to_sheet(dataExcel);
+
+    // Atur lebar kolom
+    ws["!cols"] = [
+      { wch: 5 }, // No
+      { wch: 15 }, // NIDN
+      { wch: 30 }, // Nama Lengkap
+      { wch: 20 }, // Status Dosen
+      { wch: 25 }, // Jabatan Akademik
+      { wch: 30 }, // Bidang Keahlian
+    ];
+
+    // Buat workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data Dosen");
+
+    // Download file
+    const fileName = `data_dosen_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    showToast(
+      "Export Berhasil",
+      `Data ${lecturers.length} dosen berhasil diexport ke Excel.`,
+      "success",
+    );
+  };
+  // ========== END FUNGSI EXPORT ==========
+
+  const isStudent = currentUser?.role === "mahasiswa";
 
   return (
     <section id="view-dosen" className="view-section active">
@@ -143,8 +211,18 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
             onChange={handleSearchChange}
           />
         </div>
+
+        {/* TOMBOL EXPORT EXCEL */}
+        <button className="btn btn-success" onClick={handleExportExcel}>
+          <i className="fa-solid fa-file-excel"></i> Export Excel
+        </button>
+
         {!isStudent && (
-          <button id="btn-add-dosen" className="btn btn-primary" onClick={handleOpenAddModal}>
+          <button
+            id="btn-add-dosen"
+            className="btn btn-primary"
+            onClick={handleOpenAddModal}
+          >
             <i className="fa-solid fa-plus"></i> Tambah Dosen Baru
           </button>
         )}
@@ -159,25 +237,32 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
               <th>Status Dosen</th>
               <th>Jabatan Akademik</th>
               <th>Bidang Keahlian</th>
-              {!isStudent && <th style={{ width: '100px', textAlign: 'center' }}>Aksi</th>}
+              {!isStudent && (
+                <th style={{ width: "100px", textAlign: "center" }}>Aksi</th>
+              )}
             </tr>
           </thead>
           <tbody id="table-body-dosen">
             {loading ? (
               <tr>
-                <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center' }}>
+                <td colSpan={isStudent ? 5 : 6} style={{ textAlign: "center" }}>
                   <i className="fa-solid fa-spinner fa-spin"></i> Memuat data...
                 </td>
               </tr>
             ) : lecturers.length === 0 ? (
               <tr>
-                <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td
+                  colSpan={isStudent ? 5 : 6}
+                  style={{ textAlign: "center", color: "var(--text-muted)" }}
+                >
                   Tidak ada data dosen ditemukan.
                 </td>
               </tr>
             ) : (
               lecturers.map((d) => {
-                const statusClass = d.status_dosen.toLowerCase().replace(/ /g, '_');
+                const statusClass = d.status_dosen
+                  .toLowerCase()
+                  .replace(/ /g, "_");
                 return (
                   <tr key={d.id}>
                     <td style={{ fontWeight: 700 }}>{d.nidn}</td>
@@ -187,10 +272,14 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
                         {d.status_dosen}
                       </span>
                     </td>
-                    <td>{d.jabatan || <span className="text-muted">-</span>}</td>
-                    <td>{d.keahlian || <span className="text-muted">-</span>}</td>
+                    <td>
+                      {d.jabatan || <span className="text-muted">-</span>}
+                    </td>
+                    <td>
+                      {d.keahlian || <span className="text-muted">-</span>}
+                    </td>
                     {!isStudent && (
-                      <td style={{ textAlign: 'center' }}>
+                      <td style={{ textAlign: "center" }}>
                         <div className="action-buttons">
                           <button
                             className="btn-icon btn-icon-edit"
@@ -219,11 +308,21 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
 
       {/* MODAL FORM */}
       {modalOpen && (
-        <div className="modal-backdrop active" onClick={(e) => e.target.className.includes('modal-backdrop') && setModalOpen(false)}>
+        <div
+          className="modal-backdrop active"
+          onClick={(e) =>
+            e.target.className.includes("modal-backdrop") && setModalOpen(false)
+          }
+        >
           <div className="modal-card">
             <div className="modal-header">
-              <h3 id="modal-dosen-title">{editId ? 'Edit Data Dosen' : 'Tambah Dosen Baru'}</h3>
-              <button className="modal-close-btn" onClick={() => setModalOpen(false)}>
+              <h3 id="modal-dosen-title">
+                {editId ? "Edit Data Dosen" : "Tambah Dosen Baru"}
+              </h3>
+              <button
+                className="modal-close-btn"
+                onClick={() => setModalOpen(false)}
+              >
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
@@ -300,8 +399,20 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
                 </div>
 
                 {/* USER LOGIN ACCOUNTS INTEGRATION */}
-                <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '20px', paddingTop: '15px' }}>
-                  <h4 style={{ fontSize: '14px', marginBottom: '10px', color: 'var(--primary)' }}>
+                <div
+                  style={{
+                    borderTop: "1px solid var(--border-color)",
+                    marginTop: "20px",
+                    paddingTop: "15px",
+                  }}
+                >
+                  <h4
+                    style={{
+                      fontSize: "14px",
+                      marginBottom: "10px",
+                      color: "var(--primary)",
+                    }}
+                  >
                     Akun Login Dosen (Opsional)
                   </h4>
                   <div className="form-group">
@@ -325,7 +436,11 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
                       type="password"
                       id="dosen-password"
                       className="form-control"
-                      placeholder={editId ? "Kosongkan jika tidak diubah" : "Password untuk login dosen"}
+                      placeholder={
+                        editId
+                          ? "Kosongkan jika tidak diubah"
+                          : "Password untuk login dosen"
+                      }
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -333,7 +448,11 @@ export default function DosenView({ currentUser, apiRequest, showToast, onDelete
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setModalOpen(false)}
+                >
                   Batal
                 </button>
                 <button type="submit" className="btn btn-primary">
